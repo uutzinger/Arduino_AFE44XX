@@ -119,7 +119,7 @@ Most implementations will want to use the internal H bridge to drive the LEDs.
 ### Transmitter Voltage and Current Range
 
 AFE4400 has two settings for the current range (0,1) for 0 and 50mA.
-AFE4490 has three settings for curren range (0/2,1,3) and the current through the LEDs is depending on the Voltage applied to the driver.
+AFE4490 has three settings for current range (0/2,1,3) and the current through the LEDs is depending on the Voltage applied to the driver.
 
 voltage range     |       | 1   | 0/2 |   3 |         |
 ------------------|-------|-----|-----|-----|---------|
