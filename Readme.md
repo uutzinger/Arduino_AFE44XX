@@ -21,6 +21,8 @@ Functions are privided to:
 
 Currently the Heart Rate and Oxygenation algorihm is not implemented.
 A layout how those algorithms will work once implemented is shown.
+1
+For hardware imlementation using this driver check out SPO2_Board at [Biomedical Sensor Board](https://github.com/uutzinger/BioMedicalSensorBoard). 
 
 Urs Utzinger, May/June 2024
 
@@ -76,7 +78,7 @@ The transimpedance amplifier feedback resister $C_F$ and $R_F$ can be programmed
 
 ### Receiver Capacitor
 
-Capacitor value from 0..275pF can be selected. 5pF is the default. The capacitance is created through a combination of 5 capacitors: 5, 15, 25, 50, 150 pF. When setting the capacitance, the software will choose a combinatin of them to achieve closest possible value. Lowering the value increases noise and fiedlity of the signal.
+Capacitor value from 0..275pF can be selected. 5pF is the default. The capacitance is created through a combination of 5 capacitors: 5, 15, 25, 50, 150 pF. When setting the capacitance, the software will choose a combinatin of them to achieve closest possible value. Lowering the value increases noise and fidelity of the signal.
 
 ### Receiver Feedback Resistor
 
@@ -96,7 +98,7 @@ It is better to increase the gain of the transimpedance amplifier compared to in
 
 ### Receiver Filter
 
-A low pass filter is used before the DAC to prevent aliasing. For standard setting 500 Hz should be chosen. When increaseing the sampling rate by shortening the measurment timing, a higher frequency might be apropriate.
+A low pass filter is used before the DAC to prevent aliasing. The standard setting 500 Hz should be chosen. When increaseing the sampling rate by shortening the measurment timing, a higher frequency might be appropriate.
 
 | Value | Filter |
 |-------|--------|
