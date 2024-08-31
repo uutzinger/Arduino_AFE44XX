@@ -24,6 +24,8 @@ A layout how those algorithms will work once implemented is shown.
 
 For a hardware imlementation using this driver check out the SPO2_Board at [Biomedical Sensor Board](https://github.com/uutzinger/BioMedicalSensorBoard). 
 
+For explanation on measuring artial blood oxygenation, read [Pulseoximetry](https://github.com/uutzinger/BioMedicalSensorBoard/blob/main/spo2.md)
+
 Urs Utzinger, May/June 2024
 
 ## Test Program
