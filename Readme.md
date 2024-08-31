@@ -21,8 +21,8 @@ Functions are privided to:
 
 Currently the Heart Rate and Oxygenation algorihm is not implemented.
 A layout how those algorithms will work once implemented is shown.
-1
-For hardware imlementation using this driver check out SPO2_Board at [Biomedical Sensor Board](https://github.com/uutzinger/BioMedicalSensorBoard). 
+
+For a hardware imlementation using this driver check out the SPO2_Board at [Biomedical Sensor Board](https://github.com/uutzinger/BioMedicalSensorBoard). 
 
 Urs Utzinger, May/June 2024
 
