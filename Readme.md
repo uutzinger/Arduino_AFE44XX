@@ -25,7 +25,7 @@ A layout how those algorithms will work once implemented is shown.
 Urs Utzinger, May/June 2024
 
 ## Test Program
-A program to change the AFE settings was developed. It takes the following commands. For anexplanation look into the descriptions further below.
+A program to change the AFE settings was developed. It takes the following commands. For an explanation look into the descriptions further below.
 ```
  ================================================================================
  | AFE4490 Texas Instruments Analog Front End for Clinical 2CH Pulse Oximeter   |  
@@ -61,12 +61,12 @@ A program to change the AFE settings was developed. It takes the following comma
 ```
 
 ## Blockdiagram
-The AFE44XX is typical implementation of two channel pulse oximeter driver and receiver for clinical transmission sensors. These are not typically used in classical smart watches but standard in the operating room.
+The AFE44XX is typical implementation of two channel pulse oximeter driver and receiver for clinical transmission sensors. These are not typically used in smart watches but standard in the operating room.
 
 <img src="./assets/AFE4400_Blockdiagram.png" alt="Block" width="400">
 
 ## Receiver
-The receiver is a classical transimpednace amplifier with programmable gain and low pass filter. In addition, offset currents and a second stage amplifier can be programmed.
+The receiver is a classical transimpedance amplifier with programmable gain and low pass filter. In addition, offset currents and a second stage amplification can be programmed.
 
 <img src="./assets/AFE4400_Detector.png" alt="Receiver" width="400">
 
