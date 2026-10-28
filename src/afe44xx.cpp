@@ -10,7 +10,7 @@
 //   - Power Down signal is wired
 // Other signals are optional.
 //
-// Functions are privided to:
+// Functions are provided to:
 //  - Set the Photo Diode Amplifier settings
 //  - Set the Transmitter LED current and voltage
 //  - Set the digital IO
@@ -21,6 +21,24 @@
 /******************************************************************************************************/
 #include "afe44xx.h"
 #include "logger.h"
+
+// 32 bit binary string "00000000,00000000,00000000,00000000" for log messages.
+// The shared logger library only provides an 8 bit version.
+// Rotating buffers allow several calls within one log statement.
+static char* intToBinaryString(uint32_t num) {
+    static char buffers[4][36];
+    static uint8_t next = 0;
+    char* buf = buffers[next];
+    next = (next + 1) & 3;
+    int j = 34;
+    buf[35] = '\0';
+    for (int i = 0; i < 32; ++i) {
+        if (i > 0 && (i % 8 == 0)) { buf[j--] = ','; }
+        buf[j--] = (num & 1) ? '1' : '0';
+        num >>= 1;
+    }
+    return buf;
+}
 
 // SPI Settings
 SPISettings SPI_SETTINGS(AFE44XX_SPI_SPEED, MSBFIRST, SPI_MODE0); 
@@ -520,7 +538,7 @@ int8_t AFE44XX::setFirstStageFeedbackCapacitor(uint16_t cap, uint8_t LED) {
     cap 0..275pF 5pF default 
     LED 0 both, 1 LED1, 2 LED2 
   */
-  LOGD("AFE: --Setting feeback capacitor");
+  LOGD("AFE: --Setting Feedback capacitor");
   if (cap > 275) {
       return -1;
   } else {
@@ -536,17 +554,17 @@ int8_t AFE44XX::setFirstStageFeedbackCapacitor(uint16_t cap, uint8_t LED) {
       case 0: { 
         writeRegister(TIAGAIN, tia_settings1);
         writeRegister(TIA_AMB_GAIN, tia_settings2);
-        LOGD("AFE:   Feeback capacitor on LED %u set to %u, %s, %s", LED, cap, intToBinaryString(tia_settings1), intToBinaryString(tia_settings2));
+        LOGD("AFE:   Feedback capacitor on LED %u set to %u, %s, %s", LED, cap, intToBinaryString(tia_settings1), intToBinaryString(tia_settings2));
         break;
       }
       case 1: { 
         writeRegister(TIAGAIN, tia_settings1);
-        LOGD("AFE:   Feeback capacitor on LED %u set to %u, %s", LED, cap, intToBinaryString(tia_settings1));
+        LOGD("AFE:   Feedback capacitor on LED %u set to %u, %s", LED, cap, intToBinaryString(tia_settings1));
         break;
       }
       case 2: { 
         writeRegister(TIA_AMB_GAIN, tia_settings2);
-        LOGD("AFE:   Feeback capacitor on LED %u set to %u, %s", LED, cap, intToBinaryString(tia_settings2));
+        LOGD("AFE:   Feedback capacitor on LED %u set to %u, %s", LED, cap, intToBinaryString(tia_settings2));
         break;
       }
       default: {
@@ -566,7 +584,7 @@ int8_t AFE44XX::setFirstStageFeedbackResistor(uint16_t resistance, uint8_t LED) 
 
     -1..1000 kOhm 500kOhm default 
   */
-  LOGD("AFE: --Setting feeback resistor");
+  LOGD("AFE: --Setting Feedback resistor");
   if (resistance > 1000 || resistance < -1)  {
       return -1;
   } else {
@@ -604,17 +622,17 @@ int8_t AFE44XX::setFirstStageFeedbackResistor(uint16_t resistance, uint8_t LED) 
       case 0: {
         writeRegister(TIAGAIN, tia_settings1);
         writeRegister(TIA_AMB_GAIN, tia_settings2);
-        LOGD("AFE:   Feeback resistor on LED %u set to %u, %s, %s", LED, resistance, intToBinaryString(tia_settings1), intToBinaryString(tia_settings2));
+        LOGD("AFE:   Feedback resistor on LED %u set to %u, %s, %s", LED, resistance, intToBinaryString(tia_settings1), intToBinaryString(tia_settings2));
         break;
       }
       case 1: {
         writeRegister(TIAGAIN, tia_settings1);
-        LOGD("AFE:   Feeback resistor on LED %u set to %u,%s", LED, resistance, intToBinaryString(tia_settings1));
+        LOGD("AFE:   Feedback resistor on LED %u set to %u,%s", LED, resistance, intToBinaryString(tia_settings1));
         break;
       }
       case 2: {
         writeRegister(TIA_AMB_GAIN, tia_settings2);
-        LOGD("AFE:   Feeback resistor on LED %u set to %u,%s", LED, resistance, intToBinaryString(tia_settings2));
+        LOGD("AFE:   Feedback resistor on LED %u set to %u,%s", LED, resistance, intToBinaryString(tia_settings2));
         break;
       }
       default: {
@@ -1261,7 +1279,7 @@ bool AFE44XX::stop() {
 // AFE Initialization
 /******************************************************************************************************/
 
-void AFE44XX::initalize() {
+void AFE44XX::initialize() {
 /*
   Default Initialization Sequence
 */

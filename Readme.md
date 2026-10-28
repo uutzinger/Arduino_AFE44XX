@@ -13,18 +13,18 @@ Other signals are optional.
  - LED Alarm
  - Diagnostics End
 
-Functions are privided to:
+Functions are provided to:
  - Set the Photo Diode Amplifier settings
  - Set the Transmitter LED current and voltage
  - Set the digital IO
  - Set the measurement timing
 
-Currently the Heart Rate and Oxygenation algorihm is not implemented.
+Currently the Heart Rate and Oxygenation algorithm are not implemented.
 A layout how those algorithms will work once implemented is shown.
 
-For a hardware imlementation using this driver check out the SPO2_Board at [Biomedical Sensor Board](https://github.com/uutzinger/BioMedicalSensorBoard). 
+For a hardware implementation using this driver check out the SPO2_Board at [MediBrick](https://github.com/MediBrick/SPO2_Brick). 
 
-For explanation on measuring artial blood oxygenation, read [Pulseoximetry](https://github.com/uutzinger/BioMedicalSensorBoard/blob/main/spo2.md)
+For explanation on measuring artial blood oxygenation, read [Pulseoximetry](https://github.com/MediBrick/MediBrick/blob/main/spo2_measurements.md)
 
 Urs Utzinger, May/June 2024
 
@@ -45,27 +45,29 @@ A program to change the AFE settings was developed. It takes the following comma
  | Rg1: stage2 gain LED1,        Rg1-1   | TV:  ref voltage level, TV0          |
  | Rg2: stage2 gain LED2,        Rg23    | TC:  current range,     TC0          |
  | RC1: feedback capacitor LED1, RC15    |======================================|
- | RR1: feeback resistor LED1,   RR1200  | LP1: power level LED 1, LP1255       |
+ | RR1: feedback resistor LED1,  RR1200  | LP1: power level LED 1, LP1255       |
  | RFC: filter edge frequency,   RFC0    | LP2: power level LED 2, LP2255       |
  | RFB: ambient Current,         RFB1    |======================================|
  | RC2: feedback capacitor LED2, RC25    |                                      |
- | RR2: feeback resistor LED2,   RR2200  |                                      |
+ | RR2: feedback resistor LED2,  RR2200  |                                      |
  ==Toggle================================|==Toggle===============================
  | x: 1 sameGain LED1&2 on/off   x1      | x: 5 RX on/off          x5           |
  | x: 2 tri state on/off         x2      | x: 6 TX on/off          x6           |
  | x: 3 h bridge on/off          x3      | x: 7 AFE on/off         x7           |
  | x: 4 bypass ADC on/off        x4      |                                      |
  ==Debug Level===========================|==Debug Level==========================
- | l: 0 none                     l0      |                                      |
- | l: 1 errors only              l1      |                                      |
+ | l: 0 debug (verbose)          l0      |                                      |
+ | l: 1 info                     l1      |                                      |
  | l: 2 warnings                 l2      |                                      |
- | l: 3 info                     l3      |                                      |
- | l: 4 debug                    l4      | l: 99 continous data reporting       |
+ | l: 3 errors only              l3      |                                      |
+ | l: 4 critical                 l4      |                                      |
+ | l: 5 none (silent)            l5      | l: 99 continuous data reporting      |
  ================================================================================
 ```
 
 ## Blockdiagram
-The AFE44XX is typical implementation of two channel pulse oximeter driver and receiver for clinical transmission sensors. These are not typically used in smart watches but standard in the operating room.
+The AFE44XX is typical implementation of two channel pulse oximeter driver and receiver for clinical transmission sensors. These are not typically used in smart watches but standard in the operating 
+room and physician's office.
 
 <img src="./assets/AFE4400_Blockdiagram.png" alt="Block" width="400">
 
@@ -76,15 +78,15 @@ The receiver is a classical transimpedance amplifier with programmable gain and 
 
 ### Receiver Gain
 
-The transimpedance amplifier feedback resister $C_F$ and $R_F$ can be programmed independenly for light measurements from LED_1 or LED_2.
+The transimpedance amplifier feedback resister $C_F$ and $R_F$ can be programmed independently for light measurements from LED_1 or LED_2.
 
 ### Receiver Capacitor
 
-Capacitor value from 0..275pF can be selected. 5pF is the default. The capacitance is created through a combination of 5 capacitors: 5, 15, 25, 50, 150 pF. When setting the capacitance, the software will choose a combinatin of them to achieve closest possible value. Lowering the value increases noise and fidelity of the signal.
+Capacitor value from 0..275pF can be selected. 5pF is the default. The capacitance is created through a combination of 5 capacitors: 5, 15, 25, 50, 150 pF. When setting the capacitance, the software will choose a combinations of them to achieve closest possible value. Lowering the value increases noise and fidelity of the signal.
 
 ### Receiver Feedback Resistor
 
-Resistor values of 0, 10, 25, 50, 100, 250, 500 and 1000 kOhm can be selected. Only one resistor can be selected at a time. 500 kOhm is the default. Increasing the value increases the gain and increases the noise. It can be assumed that the default value is optimal for noise.
+Resistor values of 0, 10, 25, 50, 100, 250, 500 and 1000 kOhm can be selected. Only one resistor can be selected at a time. 500 kOhm is the default. Increasing the value increases the gain and increases the noise. It can be assumed that the default value is optimal.
 
 ### Second Stage Gain
 
@@ -96,7 +98,7 @@ Resistor values of 0, 10, 25, 50, 100, 250, 500 and 1000 kOhm can be selected. O
 | 3 | 3 |
 | 4 | 4 |
 
-It is better to increase the gain of the transimpedance amplifier compared to increasing the second stage gain as in general the gain of the first stage should be opimized before adding gain on the other stages. If the signal is to low, one should increase the LED power.
+It is better to increase the gain of the trans impedance amplifier compared to increasing the second stage gain as in general the gain of the first stage should be optimized before adding gain on the other stages. If the signal is to low, one should increase the LED power before one increases detector gain.
 
 ### Receiver Filter
 
@@ -109,12 +111,12 @@ A low pass filter is used before the DAC to prevent aliasing. The standard setti
 
 ### Receiver Cancellation Current
 
-A background of 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 micro Amp can be subtracted from the detector. When light is blocked to the photo diode, its reading should be zero. However there usually is a small offset which can be subracted. Since for SPO2 calcualtion the maximum and the minimum of the signal is needed, the signal should be background free.
+A background of 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 micro Amp can be subtracted from the detector. When light is blocked to the photo diode, its reading should be zero. However there usually is a small offset which can be subtracted. Since for SPO2 calculation the maximum and the minimum of the signal is needed, the signal should be background free.
 
 ### Transmitter
 <img src="./assets/AFE4400_Driver.png" alt="Transmitterer" width="400">
 
-Most implementations will want to use the internal H bridge to drive the LEDs. 
+Most implementations will want to use the internal H bridge to drive the LEDs.
 
 ### Transmitter Voltage and Current Range
 
@@ -134,21 +136,22 @@ While common SPO2 probes use LEDs that operate between 30 and 50mA, they can be 
 
 After setting the power range, the LED power can be set for each LED to a value of 0..255 which is proportional to the max current delivered to the LED as shown above.
 
-Since pigmentation, age and weight affect the transmission of the light through tissue, one should increase the LED power for each subject so that most bits of the ADC converter are utilized. The ADC produces 22bit 2's complement which is + 2,097,151 and - −2,097,152. Therfore the signal power should be increased so that the signal is about 1,000,000.
+Since pigmentation, age and weight affect the transmission of the light through tissue, one should increase the LED power for each subject so that most bits of the ADC converter are utilized. The ADC produces 22bit 2's complement which is + 2,097,151 and −2,097,152. Therefore, the LED power should be increased so that the signal is about 1,000,000 (half od the dynamic range).
 
-For SPO2 calculations a ratio of the peak and value in the optical signal is utilized and the signal does not need to be "proportional" between the two LED wavelengths. Therefore the program should be opmized for SNR at both LEDs and each LED can have different power settings.
+For SPO2 calculations a ratio of the peak and value in the optical signal is utilized and the signal does not need to be "proportional" between the two LED wavelengths. Therefore the program should be optimized for SNR at both LEDs and each LED can have different power settings.
 
 ## Measurement Timing
 
 A timing sequences is set that for each loop a reading at LED1 and LED2 is available as well as the corresponding ambient light levels. Ambient light level is subtracted from the readings at LED1 and LED2 in the AFE.
 
-A stanard timing sequence from the datasheet is used and can be modified with a factor. If factor is 1.0, the default values are used. This results in a measurement sequence executing 500 times per second. For other Factor values, timing values are multplied with Factor but the reset pulse length and sampling offset is not altered.
+A standard timing sequence from the data sheet is used and can be modified with a factor. If factor is 1.0, the default values are used. This results in a measurement sequence executing 500 times per second. For other Factor values, timing values are multiplied with $Factor$ but the reset pulse length and sampling offset is not altered.
 
-PRPCOUNT defines the length of a measurement sequence and needs to be between 800 to 64000. One can assume that a longer sequence results in longer sampling and therefore less noise. 
+PRPCOUNT defines the length of a measurement sequence and needs to be between 800 to 64000. One can assume that a longer sequence results in longer sampling and therefore less noise.
 
 $Measurements Per Second =   4Mhz / PRPCOUNT$
 
 The measurement process is:
+
 - Turn LED on
 - Sample Signal 
 - Turn LED off
@@ -156,6 +159,7 @@ The measurement process is:
 - ADC Conversion
 
 To measure ambient, LED1 and LED2 a fixed sequence is used:
+
   1. Ambient LED2 (LED1&2 off)
   2. LED1
   3. Ambient LED1 (LED1&2 off)
@@ -170,5 +174,5 @@ The default timing for $PRPCOUNT=8000$ is as following:
 | LED1        | 2000-3999| 2050-3998| 4004-5999| 4000-4003|
 | Ambient LED2|          |   50-1998| 2004-3999| 2000-2003|
 | Ambient LED1|          | 4050-5998| 6004-7999| 6000-6003| 
-    
-This results in LED pulses of 0.5ms and 500 background subtracted measuarements for both channels per second.
+
+This results in LED pulses of 0.5ms and 500 background subtracted measurements for both channels per second.

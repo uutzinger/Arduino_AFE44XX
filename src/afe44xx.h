@@ -88,7 +88,7 @@ class AFE44XX {
         void clearCNTRL0(); // clear CONTROL0 register
         bool start(uint8_t numAverages); // start data acquisition, must initilize first
         bool stop(); // stop data acquisition
-        void initalize(); // initialize the AFE44XX
+        void initialize(); // initialize the AFE44XX
 
         // Accessing readings
         void getData(int32_t &irRawValue, int32_t &redRawValue,

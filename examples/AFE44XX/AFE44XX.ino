@@ -7,7 +7,7 @@
 //   - Startup and Configure AFE
 //   - Inspect Registers
 //   - Run Diagnostics
-//   - Read background subtracted IR and RED readings continously
+//   - Read background subtracted IR and RED readings continuously
 //
 // The AFE functions are organized into the following groups:
 //   - Photodiode receiver settings
@@ -31,12 +31,10 @@
 #include "afe44xx.h"
 #include "logger.h"
 
-// Select the  defaultlog level, you can change this at runtime also
-// #define LOG_LEVEL LOG_LEVEL_NONE 
-// #define LOG_LEVEL LOG_LEVEL_ERROR
-// #define LOG_LEVEL LOG_LEVEL_WARN 
-#define LOG_LEVEL LOG_LEVEL_INFO 
-// #define LOG_LEVEL LOG_LEVEL_DEBUG
+// Select the default log level, you can change this at runtime also.
+// Levels are ordered from verbose to silent (UUtzinger_logger, same as NimBLE):
+// LOG_LEVEL_DEBUG(0), LOG_LEVEL_INFO(1), LOG_LEVEL_WARN(2), LOG_LEVEL_ERROR(3), LOG_LEVEL_CRITICAL(4), LOG_LEVEL_NONE(5)
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 // Serial
 #define BAUD_RATE 500000  // Up to 2,000,000 on ESP32, however more than 500 kBaud might be unreliable
@@ -144,7 +142,7 @@ void setup() {
 
   // Initialize globals
   // ------------------
-  currentLogLevel = LOG_LEVEL;
+  logSetLevel(LOG_LEVEL);
   afe44xx_diag_status = 0;
 
   // Serial
@@ -330,22 +328,23 @@ void helpMenu() {
   Serial.println("| Rg1: stage2 gain LED1,        Rg1-1   | TV:  ref voltage level, TV0          |");
   Serial.println("| Rg2: stage2 gain LED2,        Rg23    | TC:  current range,     TC0          |");
   Serial.println("| RC1: feedback capacitor LED1, RC15    |======================================|");
-  Serial.println("| RR1: feeback resistor LED1,   RR1200  | LP1: power level LED 1, LP1255       |");
+  Serial.println("| RR1: feedback resistor LED1,  RR1200  | LP1: power level LED 1, LP1255       |");
   Serial.println("| RFC: filter edge frequency,   RFC0    | LP2: power level LED 2, LP2255       |");
   Serial.println("| RFB: ambient Current,         RFB1    |======================================|");
   Serial.println("| RC2: feedback capacitor LED2, RC25    |                                      |");
-  Serial.println("| RR2: feeback resistor LED2,   RR2200  |                                      |");
+  Serial.println("| RR2: feedback resistor LED2,   RR2200 |                                      |");
   Serial.println("==Toggle================================|==Toggle===============================");
   Serial.println("| x: 1 sameGain LED1&2 on/off   x1      | x: 5 RX on/off          x5           |");
   Serial.println("| x: 2 tri state on/off         x2      | x: 6 TX on/off          x6           |");
   Serial.println("| x: 3 h bridge on/off          x3      | x: 7 AFE on/off         x7           |");
   Serial.println("| x: 4 bypass ADC on/off        x4      |                                      |");
   Serial.println("==Debug Level===========================|==Debug Level==========================");
-  Serial.println("| l: 0 none                     l0      |                                      |");
-  Serial.println("| l: 1 errors only              l1      |                                      |");
+  Serial.println("| l: 0 debug (verbose)          l0      |                                      |");
+  Serial.println("| l: 1 info                     l1      |                                      |");
   Serial.println("| l: 2 warnings                 l2      |                                      |");
-  Serial.println("| l: 3 info                     l3      |                                      |");
-  Serial.println("| l: 4 debug                    l4      | l: 99 continous data reporting       |");
+  Serial.println("| l: 3 errors only              l3      |                                      |");
+  Serial.println("| l: 4 critical                 l4      |                                      |");
+  Serial.println("| l: 5 none (silent)            l5      | l: 99 continuous data reporting      |");
   Serial.println("================================================================================");
 }
 
@@ -390,7 +389,7 @@ void handleUppercaseCommand(const char* command) {
       switch (command[1]){
         case 'g': { // set gain
           if ( (tmpI < -1) || (tmpI>4)) {
-            snprintf(tmpStr, sizeof(tmpStr), "Stage 2 gain ouside of rangem[-1..4]");
+            snprintf(tmpStr, sizeof(tmpStr), "Stage 2 gain outside of range [-1..4]");
           } else {
             if (command[2] == '1') {
               afe44xx_stage2Gain1 = tmpI;
@@ -415,7 +414,7 @@ void handleUppercaseCommand(const char* command) {
         }
         case 'C': { // feedback capacitor
           if ( (tmpI < 0) || (tmpI>275)) {
-            snprintf(tmpStr, sizeof(tmpStr), "Feedback capacitor ouside of range [0..275]");
+            snprintf(tmpStr, sizeof(tmpStr), "Feedback capacitor outside of range [0..275]");
           } else {
             if (command[2] == '1') {
               afe44xx_CF1 = tmpI;
@@ -483,7 +482,7 @@ void handleUppercaseCommand(const char* command) {
                 snprintf(tmpStr, sizeof(tmpStr), "Error: Ambient background could not be set to: %d", tmpI);
               }
             } else {
-              snprintf(tmpStr, sizeof(tmpStr), "Ambient background current ouside of range");
+              snprintf(tmpStr, sizeof(tmpStr), "Ambient background current outside of range");
             }
           }
           break;
@@ -607,16 +606,16 @@ void handleLowercaseCommand(const char* command) {
     case 'l': { // set debug level
       if (commandLen > 1) {
         tmpuI = strtoul(&command[1], NULL, 10);
-        if (tmpuI >= 0 && tmpuI <= 4) {
-          currentLogLevel = (unsigned int)tmpuI;
+        if (tmpuI <= (unsigned long)LOG_LEVEL_NONE) {
+          logSetLevel((int)tmpuI);
           afe44xx_reporting = false;
-          snprintf(tmpStr, sizeof(tmpStr), "Debug level set to: %u", currentLogLevel);
+          snprintf(tmpStr, sizeof(tmpStr), "Log level set to: %d", logGetLevel());
         } else if (tmpuI==99) {
-          currentLogLevel = 0;
+          logSetLevel(LOG_LEVEL_NONE);  // silence log messages so they do not mix with the data stream
           afe44xx_reporting = true;
           strcpy(tmpStr, "Reporting enabled");
         } else {
-          strcpy(tmpStr, "Debug level out of valid range [0..4,99]");
+          strcpy(tmpStr, "Log level out of valid range [0..5,99]");
         }
       } else {
         strcpy(tmpStr, "No log level provided. Check help with ?");
@@ -634,7 +633,7 @@ void handleLowercaseCommand(const char* command) {
             afe44xx_running = afe44xx.stop();
             afe44xx.setTimers(afe44xx_factor);
             afe44xx_running = afe44xx.start(afe44xx_numAverage); 
-            snprintf(tmpStr, sizeof(tmpStr), "Re-started data aquisition with timing factor of %.2f and averaging of %4u", afe44xx_factor, afe44xx_numAverage);
+            snprintf(tmpStr, sizeof(tmpStr), "Re-started data acquisition with timing factor of %.2f and averaging of %4u", afe44xx_factor, afe44xx_numAverage);
           } else {
             afe44xx.setTimers(afe44xx_factor);
             snprintf(tmpStr, sizeof(tmpStr), "System not running, Timing factor set to: %.2f", afe44xx_factor);
@@ -790,7 +789,7 @@ void handleLowercaseCommand(const char* command) {
     case 's': { // show settings
       Serial.println("==Settings======================================================================");
       Serial.println("===============General:");
-      snprintf(tmpStr, sizeof(tmpStr), "Log Level: %u", currentLogLevel); Serial.println(tmpStr); 
+      snprintf(tmpStr, sizeof(tmpStr), "Log Level: %d", logGetLevel()); Serial.println(tmpStr); 
       snprintf(tmpStr, sizeof(tmpStr), "Current Time: %u", currentTime); Serial.println(tmpStr); 
       snprintf(tmpStr, sizeof(tmpStr), "Timing factor: %f", afe44xx_factor); Serial.println(tmpStr); 
       snprintf(tmpStr, sizeof(tmpStr), "Number of averages: %u", afe44xx_numAverage); Serial.println(tmpStr);       
@@ -883,7 +882,7 @@ void handleLowercaseCommand(const char* command) {
             afe44xx_running=afe44xx.stop();
             delay(10);
             afe44xx_running=afe44xx.start(afe44xx_numAverage);
-            snprintf(tmpStr, sizeof(tmpStr), "Re-started data aquistion with average of %u.", afe44xx_numAverage);  
+            snprintf(tmpStr, sizeof(tmpStr), "Re-started data acquisition with average of %u.", afe44xx_numAverage);  
           } else {
             snprintf(tmpStr, sizeof(tmpStr), "System not running, Number of averages set to: %u", afe44xx_numAverage);
           }
@@ -891,7 +890,7 @@ void handleLowercaseCommand(const char* command) {
           strcpy(tmpStr, "Number of averages out of range [1..16]");
         }
       } else {
-        strcpy(tmpStr, "No number of avareages provided. Check help with ?");
+        strcpy(tmpStr, "No number of averages provided. Check help with ?");
       }
       Serial.println(tmpStr);
       break;
@@ -904,7 +903,7 @@ void handleLowercaseCommand(const char* command) {
         strcpy(tmpStr, "Stopped data acquisition"); 
       } else if ((bool)afe44xx_running == true) {
         afe44xx_running=afe44xx.start(afe44xx_numAverage);
-        snprintf(tmpStr, sizeof(tmpStr), "Started data aquistion with average of %u", afe44xx_numAverage);  
+        snprintf(tmpStr, sizeof(tmpStr), "Started data acquisition with average of %u", afe44xx_numAverage);  
       }
       Serial.println(tmpStr);
       break;
